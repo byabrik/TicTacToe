@@ -12,9 +12,14 @@ namespace TicTacToe
 
         public bool MakeMove(Board board, Move move)
         {
-            return board.SetFigure(move, _figure);
+            return board.SetFigure(move);
         }
 
         private readonly Figures _figure;
+
+        public Figures Figure
+        {
+            get { return _figure; }
+        }
     }
 }

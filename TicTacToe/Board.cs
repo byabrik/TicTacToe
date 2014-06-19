@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Remoting.Messaging;
 
 namespace TicTacToe
 {
@@ -17,45 +21,42 @@ namespace TicTacToe
         None
     }
 
-    public class Board
+    public sealed class Board
     {
-        public readonly int ColsNumber;
-        public readonly int RowsNumber;
+        public int ColsNumber { get; private set; }
+        public int RowsNumber { get; private set; }
+        public Figures[][] Cells
+        {
+            get { return _cells; }
+        }
 
-        private Figures[][] _cells;
-
-        public Board(int rowsNumber, int colsNumber)
+        public Board(int rowsNumber, int colsNumber, Figures[][] boardFigureses)
         {
             RowsNumber = rowsNumber;
             ColsNumber = colsNumber;
 
-            InitBoard();
+            InitBoard(null);
 
-            PopulateBoard();
+            if (boardFigureses != null)
+            {
+                PopulateBoard(boardFigureses);
+            }
         }
+
+        private Figures[][] _cells;
 
         public int Length
         {
             get { return _cells.Length; }
         }
 
-        private void InitBoard()
+        public void InitBoard(Figures[][] boardFigures)
         {
+            //init cells
             _cells = new Figures[RowsNumber][];
-            for (var i = 0; i < ColsNumber; i++)
-            {
-                _cells[i] = new Figures[ColsNumber];
-            }
-        }
-
-        private void PopulateBoard()
-        {
             for (int i = 0; i < RowsNumber; i++)
             {
-                for (int j = 0; j < ColsNumber; j++)
-                {
-                    _cells[i][j] = Figures.None;
-                }
+                _cells[i] = Enumerable.Repeat(Figures.None, ColsNumber).ToArray();
             }
         }
 
@@ -70,40 +71,16 @@ namespace TicTacToe
             }
         }
 
-        public void PrintBoard()
+        public bool SetFigure(Move move)
         {
-            for (int i = 0; i < RowsNumber; i++)
+            if (move.X >= 0 
+                && move.X < RowsNumber 
+                && move.Y >= 0 
+                && move.Y < ColsNumber 
+                && _cells[move.X][move.Y] == Figures.None)
             {
-                for (int j = 0; j < ColsNumber; j++)
-                {
-                    switch (_cells[i][j])
-                    {
-                        case Figures.None:
-                            Console.Write("| |");
-                            break;
-                        case Figures.X:
-                            Console.Write("|X|");
-                            break;
-                        case Figures.O:
-                            Console.Write("|0|");
-                            break;
-                    }
-                    Console.Write(" ");
-                }
-                Console.WriteLine(Environment.NewLine);
-            }
-        }
-
-        public bool SetFigure(Move move, Figures figure)
-        {
-            if (move.X >= 0 && move.X < RowsNumber && move.Y >= 0 && move.Y < ColsNumber)
-            {
-                if (_cells[move.X][move.Y] != Figures.None)
-                {
-                    return false;
-                }
-
-                _cells[move.X][move.Y] = figure;
+            
+                _cells[move.X][move.Y] = move.Figure;
 
                 return true;
             }
@@ -111,7 +88,7 @@ namespace TicTacToe
             return false;
         }
 
-        internal bool IsEmpty(Move move)
+        public bool IsEmpty(Move move)
         {
             if (move.X < 0 || move.X >= RowsNumber || move.Y < 0 || move.Y >= ColsNumber)
             {
@@ -123,40 +100,32 @@ namespace TicTacToe
 
         internal bool HasEmptyCells()
         {
-            for (int i = 0; i < RowsNumber; i++)
-            {
-                for (int j = 0; j < ColsNumber; j++)
-                {
-                    if (_cells[i][j] == Figures.None)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return _cells.SelectMany(x => x).Any(x => x == Figures.None);
         }
 
         public Figures GetFigure(int index, int dynamcIndex, Check check)
         {
-            if (check == Check.Row)
+            switch(check)
             {
-                return _cells[index][dynamcIndex];
-            }
-            if (check == Check.Column)
-            {
-                return _cells[dynamcIndex][index];
-            }
-            if (check == Check.Diagonal)
-            {
-                return _cells[dynamcIndex][dynamcIndex];
-            }
-            if (check == Check.ReverseDiagonal)
-            {
-                return _cells[Length - 1 - dynamcIndex][dynamcIndex];
-            }
+                case Check.Row:
+                    return _cells[index][dynamcIndex];
+                    break;
 
-            return Figures.None;
+                case Check.Column:
+                    return _cells[dynamcIndex][index];
+                    break;
+
+                case Check.Diagonal:
+                    return _cells[dynamcIndex][dynamcIndex];
+                    break;
+
+                case Check.ReverseDiagonal:
+                    return _cells[Length - 1 - dynamcIndex][dynamcIndex];
+                    break;
+
+                default:
+                    return Figures.None;
+            }
         }
     }
 }

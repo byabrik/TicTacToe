@@ -5,14 +5,16 @@ using System.Text;
 
 namespace TicTacToe
 {
-    public class Move
+    public sealed class Move
     {
-        public Move(int x, int y)
+        public Move(int x, int y, Figures figure)
         {
             X = x;
             Y = y;
+            Figure = figure;
         }
-        public int X { get; set; }
-        public int Y { get; set; }
+        public int X { get; private set; }
+        public int Y { get; private set; }
+        public Figures Figure { get; set; }
     }
 }

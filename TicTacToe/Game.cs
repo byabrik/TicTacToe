@@ -10,30 +10,20 @@ namespace TicTacToe
         private readonly Player _player2;
         private Player _currentPlayer;
         private Player _winner;
-
-        public Game(int rowsNumber, int colsNumber, IInputOutput inputOutput)
+        private enum GameState
         {
-            _inputOutput = inputOutput;
-            _board = new Board(rowsNumber, colsNumber);
-            _player1 = new Player(Figures.X, "Player1");
-            _player2 = new Player(Figures.O, "Player2");
-            _currentPlayer = _player2;
+            InProgress,
+            Teko,
+            HasWinner
         }
 
-        public int GameOver()
+        public Game(int rowsNumber, int colsNumber, IInputOutput inputOutput, Figures[][] boardFigures)
         {
-            if (HasWon() != Figures.None)
-            {
-                _winner = _currentPlayer;
-                return 1;
-            }
-
-            if (!_board.HasEmptyCells())
-            {
-                return 0;
-            }
-
-            return -1;
+            _inputOutput = inputOutput;
+            _board = new Board(rowsNumber, colsNumber, boardFigures);
+            _player1 = new Player(Figures.X, "Player1");
+            _player2 = new Player(Figures.O, "Player2");
+            _currentPlayer = _player1;
         }
 
         public bool IsValidMove(Move move)
@@ -41,77 +31,50 @@ namespace TicTacToe
             return _board.IsEmpty(move);
         }
 
-
         public void StartGame()
         {
-            while (GameOver() == -1)
+            while (GameOver() == GameState.InProgress)
             {
-                _currentPlayer = _currentPlayer == _player1 ? _player2 : _player1;
+                _inputOutput.ShowBoard(_board.Cells);
 
-                _board.PrintBoard();
-
-                var move = GetUserInput();
+                var move = _inputOutput.GetUserInput(_currentPlayer, _board.Cells, IsValidMove);
 
                 _currentPlayer.MakeMove(_board, move);
 
-                _inputOutput.WriteLine(Environment.NewLine);
+                SwitchPlayers();
             }
 
             if (_winner == null)
             {
-                _inputOutput.WriteLine("Teko!");
+                _inputOutput.AnnounceTeko();
             }
             else
             {
-                _inputOutput.WriteLine(string.Format("Congratulations {0}, you won!", _winner.Name));
+                _inputOutput.ShowBoard(_board.Cells);
+                _inputOutput.AnnounceTheWinner(_winner.Name);
             }
         }
 
-        private Move GetUserInput()
+        private void SwitchPlayers()
         {
-            _inputOutput.WriteLine(Environment.NewLine);
-            _inputOutput.WriteLine(_currentPlayer.Name + " move:");
+            _currentPlayer = _currentPlayer == _player1 ? _player2 : _player1;
+        }
 
-            bool flag = false;
-            int inputX = -1;
-            int inputY = -1;
-
-            while (!flag)
+        private GameState GameOver()
+        {
+            if (HasWon() != Figures.None)
             {
-                _inputOutput.WriteLine("Enter x coordinate:");
-                string strX = _inputOutput.Read();
-                _inputOutput.WriteLine("Enter y coordinate:");
-                string strY = _inputOutput.Read();
-
-                bool xResult = int.TryParse(strX, out inputX);
-
-                if (!xResult || (xResult && (inputX < 0 || inputX >= _board.RowsNumber)))
-                {
-                    _inputOutput.WriteLine("incorrect x input");
-                    _board.PrintBoard();
-                    continue;
-                }
-
-                bool yResult = int.TryParse(strY, out inputY);
-
-                if (!yResult || (yResult && (inputY < 0 || inputY >= _board.ColsNumber)))
-                {
-                    _inputOutput.WriteLine("incorrect y input");
-                    _board.PrintBoard();
-                    continue;
-                }
-
-                if (!IsValidMove(new Move(inputX, inputY)))
-                {
-                    _inputOutput.WriteLine("Incorrect move, please try again");
-                    _board.PrintBoard();
-                    continue;
-                }
-
-                flag = true;
+                _winner = _currentPlayer == _player1 ? _player2 : _player1;
+                
+                return GameState.HasWinner;
             }
 
-            return new Move(inputX, inputY);
+            if (!_board.HasEmptyCells())
+            {
+                return GameState.Teko;
+            }
+
+            return GameState.InProgress;
         }
 
         private Figures HasWon()
