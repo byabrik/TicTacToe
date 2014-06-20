@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.Remoting.Messaging;
+﻿using System.Linq;
 
 namespace TicTacToe
 {
@@ -23,12 +19,7 @@ namespace TicTacToe
 
     public sealed class Board
     {
-        public int ColsNumber { get; private set; }
-        public int RowsNumber { get; private set; }
-        public Figures[][] Cells
-        {
-            get { return _cells; }
-        }
+        private Figures[][] _cells;
 
         public Board(int rowsNumber, int colsNumber, Figures[][] boardFigureses)
         {
@@ -43,11 +34,17 @@ namespace TicTacToe
             }
         }
 
-        private Figures[][] _cells;
+        public int ColsNumber { get; private set; }
+        public int RowsNumber { get; private set; }
 
         public int Length
         {
             get { return _cells.Length; }
+        }
+
+        public Figures[][] GetCells()
+        {
+            return (Figures[][]) _cells.Clone();
         }
 
         public void InitBoard(Figures[][] boardFigures)
@@ -73,13 +70,12 @@ namespace TicTacToe
 
         public bool SetFigure(Move move)
         {
-            if (move.X >= 0 
-                && move.X < RowsNumber 
-                && move.Y >= 0 
-                && move.Y < ColsNumber 
+            if (move.X >= 0
+                && move.X < RowsNumber
+                && move.Y >= 0
+                && move.Y < ColsNumber
                 && _cells[move.X][move.Y] == Figures.None)
             {
-            
                 _cells[move.X][move.Y] = move.Figure;
 
                 return true;
@@ -105,7 +101,7 @@ namespace TicTacToe
 
         public Figures GetFigure(int index, int dynamcIndex, Check check)
         {
-            switch(check)
+            switch (check)
             {
                 case Check.Row:
                     return _cells[index][dynamcIndex];

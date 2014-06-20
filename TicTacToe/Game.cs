@@ -35,9 +35,9 @@ namespace TicTacToe
         {
             while (GameOver() == GameState.InProgress)
             {
-                _inputOutput.ShowBoard(_board.Cells);
+                _inputOutput.ShowBoard(_board.GetCells());
 
-                var move = _inputOutput.GetUserInput(_currentPlayer, _board.Cells, IsValidMove);
+                var move = _inputOutput.GetUserInput(_currentPlayer, _board.GetCells(), IsValidMove);
 
                 _currentPlayer.MakeMove(_board, move);
 
@@ -50,7 +50,7 @@ namespace TicTacToe
             }
             else
             {
-                _inputOutput.ShowBoard(_board.Cells);
+                _inputOutput.ShowBoard(_board.GetCells());
                 _inputOutput.AnnounceTheWinner(_winner.Name);
             }
         }
@@ -79,12 +79,12 @@ namespace TicTacToe
 
         private Figures HasWon()
         {
-            int N = _board.Length;
+            int n = _board.Length;
 
             var winner = Figures.None;
 
             // Check rows and columns
-            for (int i = 0; i < N; i++)
+            for (int i = 0; i < n; i++)
             {
                 winner = GetWinner(i, Check.Row);
                 if (winner != Figures.None)
